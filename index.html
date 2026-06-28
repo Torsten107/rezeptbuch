@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rezeptbuch</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --kern-blue: #003064;
+      --kern-blue-light: #e6edf5;
+      --kern-text-default: #1a1a1a;
+      --kern-text-muted: #595959;
+      --kern-bg-default: #f4f4f4;
+      --kern-bg-surface: #ffffff;
+      --kern-border: #767676;
+      --kern-border-light: #d0d0d0;
+      --kern-action: #003064;
+      --kern-action-hover: #00204a;
+      --kern-focus: #003064;
+      --kern-success: #1a6b3c;
+      --kern-warning: #7a4800;
+      --kern-warning-bg: #fff3e0;
+      --kern-radius: 4px;
+      --kern-font: 'Fira Sans', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--kern-font); background: var(--kern-bg-default); color: var(--kern-text-default); font-size: 1rem; line-height: 1.5; }
+    .app { max-width: 960px; margin: 0 auto; }
+    .kern-header { background: var(--kern-blue); padding: 16px 24px; }
+    .kern-logo { color: #fff; font-size: 1.125rem; font-weight: 600; }
+    .kern-logo span { font-weight: 400; opacity: .8; }
+    .kern-main { padding: 24px; }
+    .search-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .kern-input { width: 100%; padding: 10px 12px; border-radius: var(--kern-radius); border: 2px solid var(--kern-border); background: var(--kern-bg-surface); color: var(--kern-text-default); font-size: 1rem; font-family: var(--kern-font); }
+    .kern-input:focus { outline: 3px solid var(--kern-focus); outline-offset: 2px; border-color: var(--kern-focus); }
+    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+    .chip { padding: 6px 14px; border-radius: 20px; border: 2px solid var(--kern-border-light); background: var(--kern-bg-surface); color: var(--kern-text-muted); font-size: .875rem; font-family: var(--kern-font); cursor: pointer; font-weight: 500; }
+    .chip:hover { border-color: var(--kern-action); color: var(--kern-action); }
+    .chip.active { background: var(--kern-action); color: #fff; border-color: var(--kern-action); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+    .card { background: var(--kern-bg-surface); border: 1px solid var(--kern-border-light); border-left: 4px solid var(--kern-blue); border-radius: var(--kern-radius); padding: 16px; cursor: pointer; }
+    .card:hover { border-color: var(--kern-action); border-left-color: var(--kern-action); }
+    .card:focus { outline: 3px solid var(--kern-focus); outline-offset: 2px; }
+    .card-cat { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--kern-text-muted); margin-bottom: 4px; }
+    .card-title { font-size: 1.125rem; font-weight: 600; margin-bottom: 4px; line-height: 1.3; }
+    .card-meta { font-size: .875rem; color: var(--kern-text-muted); }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+    .tag { font-size: .75rem; padding: 2px 8px; border-radius: 2px; background: var(--kern-blue-light); color: var(--kern-blue); font-weight: 500; }
+    .empty { text-align: center; padding: 48px 16px; color: var(--kern-text-muted); grid-column: 1/-1; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: var(--kern-radius); font-family: var(--kern-font); font-size: 1rem; font-weight: 500; cursor: pointer; border: 2px solid transparent; }
+    .btn-secondary { background: var(--kern-bg-surface); color: var(--kern-action); border-color: var(--kern-action); }
+    .btn-secondary:hover { background: var(--kern-blue-light); }
+    .btn-ghost { background: transparent; color: var(--kern-action); border-color: transparent; }
+    .btn-ghost:hover { background: var(--kern-blue-light); }
+    .btn-sm { padding: 6px 12px; font-size: .875rem; }
+    .btn-icon { padding: 8px; }
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,16,.55); display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; z-index: 100; overflow-y: auto; }
+    .modal { background: var(--kern-bg-surface); border-radius: var(--kern-radius); border: 1px solid var(--kern-border-light); width: 100%; max-width: 640px; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 2px solid var(--kern-blue); position: sticky; top: 0; background: var(--kern-bg-surface); z-index: 1; }
+    .modal-title { font-size: 1.3125rem; font-weight: 600; }
+    .modal-body { padding: 20px; }
+    .detail-eyebrow { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--kern-text-muted); margin-bottom: 6px; }
+    .detail-title { font-size: 1.625rem; font-weight: 600; margin-bottom: 4px; line-height: 1.2; }
+    .detail-source { font-size: .875rem; color: var(--kern-text-muted); margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--kern-border-light); }
+    .section-label { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--kern-text-muted); margin-bottom: 10px; margin-top: 20px; }
+    .scale-row { display: flex; align-items: center; gap: 12px; }
+    .scale-btn { width: 36px; height: 36px; border-radius: var(--kern-radius); border: 2px solid var(--kern-action); background: var(--kern-bg-surface); color: var(--kern-action); font-size: 20px; cursor: pointer; font-family: var(--kern-font); display: flex; align-items: center; justify-content: center; font-weight: 500; }
+    .scale-btn:hover { background: var(--kern-blue-light); }
+    .portions-display { font-size: 1rem; font-weight: 600; min-width: 90px; }
+    .ing-list { list-style: none; border-top: 1px solid var(--kern-border-light); }
+    .ing-list li { display: flex; align-items: baseline; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--kern-border-light); font-size: .875rem; }
+    .ing-amount { min-width: 90px; font-weight: 600; color: var(--kern-blue); }
+    .steps-list { list-style: none; }
+    .step { display: flex; gap: 14px; margin-bottom: 16px; cursor: pointer; }
+    .step-num { min-width: 28px; height: 28px; border-radius: 50%; background: var(--kern-blue); color: #fff; font-size: .875rem; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+    .step-text { font-size: 1rem; line-height: 1.6; }
+    .step-done .step-num { background: var(--kern-success); }
+    .step-done .step-text { color: var(--kern-text-muted); text-decoration: line-through; }
+    .timer-btn { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; font-size: .875rem; padding: 4px 10px; border-radius: var(--kern-radius); background: var(--kern-warning-bg); color: var(--kern-warning); border: 1px solid var(--kern-warning); cursor: pointer; font-family: var(--kern-font); font-weight: 500; }
+    .active-timer { font-size: .875rem; padding: 4px 10px; border-radius: var(--kern-radius); background: var(--kern-warning-bg); color: var(--kern-warning); font-weight: 600; margin-top: 4px; display: inline-block; border: 1px solid var(--kern-warning); }
+    .cook-actions { margin-bottom: 16px; margin-top: 4px; }
+    .notes-box { background: var(--kern-blue-light); border-left: 4px solid var(--kern-blue); padding: 12px 14px; border-radius: 0 var(--kern-radius) var(--kern-radius) 0; margin-top: 20px; font-size: .875rem; color: var(--kern-blue); }
+    .notes-label { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="kern-header">
+    <div class="kern-logo">Rezept<span>buch</span></div>
+  </div>
+  <div class="kern-main">
+    <div class="search-row">
+      <input type="text" class="kern-input" id="search-input" placeholder="Nach Name oder Zutat suchen …" oninput="renderList()" aria-label="Rezepte durchsuchen">
+    </div>
+    <div class="filter-row" id="filter-row"></div>
+    <div class="grid" id="recipe-grid"></div>
+  </div>
+</div>
+
+<div id="modal-detail" class="hidden">
+  <div class="overlay" onclick="if(event.target===this)closeDetail()">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <span class="modal-title" id="d-header">Rezept</span>
+        <button class="btn btn-ghost btn-icon" onclick="closeDetail()" aria-label="Schließen">✕</button>
+      </div>
+      <div class="modal-body" id="detail-body"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const RECIPES = [
+  {
+    "id": "1",
+    "name": "Halloumi mit geschmorten Aprikosen",
+    "category": "Hauptgericht",
+    "portions": 4, "basePortion": 4,
+    "source": "ZEITmagazin – Elisabeth Raether",
+    "ingredients": ["200 g Aprikosen","1 EL Honig","1 TL Balsamico","1 EL Olivenöl","1 TL Thymian","Salz","Pfeffer","250 g Halloumi","60 g Pekannüsse","2 TL Zucker","1 EL Wasser"],
+    "steps": ["Pekannüsse in einer Pfanne bei mittlerer Hitze 2 Minuten anrösten.","Zucker und Wasser in die Pfanne geben und sofort rühren, bis sich der Zucker aufgelöst hat.","Nüsse auf Backpapier auskühlen lassen.","Balsamico, Olivenöl, Thymian, Salz und Pfeffer in einen kleinen Topf geben und 15 Minuten köcheln lassen.","Aprikosen halbieren und mit Honig und Öl 3 Minuten schmoren.","Halloumi von beiden Seiten mit Öl bepinseln und goldbraun braten.","Halloumi auf Tellern anrichten, Aprikosen dazulegen, mit der Soße beträufeln und mit Nüssen bestreuen."],
+    "notes": "", "tags": ["vegetarisch","sommer"]
+  },
+  {
+    "id": "2",
+    "name": "Heringssalat",
+    "category": "Salat",
+    "portions": 8, "basePortion": 8,
+    "source": "Familienrezept",
+    "ingredients": ["2-3 Zwiebeln","1 Jagdwurst","1 Packung Matjes","4-5 Äpfel","6 Eier (hartgekocht)","1 Glas Gewürzgurken"],
+    "steps": ["Alle Zutaten in kleine Würfel schnippeln – \"klein\" heißt wirklich klein.","Alles gründlich mischen.","Am besten über Nacht ziehen lassen."],
+    "notes": "Zwingend mindestens zum Jahreswechsel aufschneiden.", "tags": ["klassiker","silvester","familienrezept"]
+  },
+  {
+    "id": "3",
+    "name": "Fleischbällchen-Tajine mit Eiern und Tomaten",
+    "category": "Hauptgericht",
+    "portions": 3, "basePortion": 3,
+    "source": "ZEITmagazin – Elisabeth Raether",
+    "ingredients": ["2 kleine Zwiebeln","500 g Rinder- oder Lammhackfleisch","1 TL gemahlener Ingwer","1 EL Paprikapulver","1 EL gemahlener Kreuzkümmel","Salz","Pfeffer","ein paar Zweige glatte Petersilie","2 Knoblauchzehen","etwas Olivenöl","1 Dose geschälte Tomaten (400 g, sehr gut sind Kirschtomaten)","3 Eier"],
+    "steps": ["Zwiebeln schälen, fein hacken und zusammen mit dem Hackfleisch in eine Schüssel geben.","Die Hälfte der Gewürze (Ingwer, Paprika und Kreuzkümmel) hinzufügen, salzen, pfeffern und alles gut vermischen. Mit den Händen Fleischbällchen formen.","Die andere Soße zubereiten: Knoblauch schälen und fein hacken, ebenso Zwiebel. In einer Pfanne Olivenöl erhitzen und Knoblauch und Zwiebel andünsten.","Tomaten dazugeben. Beides in Olivenöl andünsten. Die andere Hälfte der Gewürze in die Soße geben. Ein paar Minuten köcheln lassen.","Fleischbällchen in die Soße setzen. Den Topf mit dem Deckel schließen. Ein paar Minuten köcheln in dem Topf mit Salzwasser.","Die Eier setzen und schließlich die Soße mit Pfeffer abschmecken. Alles ohne Deckel so lange garen, bis das Eiklar weiß ist.","Zum Schluss mit gehackter Petersilie bestreuen."],
+    "notes": "", "tags": ["fleisch","tajine","marokkanisch"]
+  },
+  {
+    "id": "4",
+    "name": "Gnocchi di pane",
+    "category": "Hauptgericht",
+    "portions": 4, "basePortion": 4,
+    "source": "ZEITmagazin – Elisabeth Raether",
+    "ingredients": ["260 g Weißbrot vom Vortag","240 ml Milch","80 g Parmesan (fein gerieben)","2 Eier","1 Prise Muskatnuss","Salz","schwarzer Pfeffer","100 g Mehl (plus etwas mehr)","750 ml passierte Tomaten","1 Prise Zucker","1 Prise Salz","2 Knoblauchzehen","etwas Olivenöl","ein paar Basilikumblätter (frisch, fein gerieben)"],
+    "steps": ["Brot in Würfel schneiden, diese in den Topf geben. Milch dazugeben und circa 10 Minuten mit der Milch begießen, sodass Brotwürfel lang so stehen lassen. Anschließend die Brotmasse mit den Fingern zerdrücken, dann mit Muskat, Parmesan hinzufügen, ebenso die Eier, dann mit Salz und Mehl vermengen. Pasta entsteht.","Jetzt die Gnocchi formen: etwas Mehl auf die Arbeitsfläche geben, den Teig mit etwas Mehl auf die Arbeitsfläche geben. Dann die Gnocchi formen. Man nimmt jeweils einen guten 1 TL Teig ab und rollt ihn zwischen den Handflächen zu einer Kugel.","Den Ofen auf 180 Grad Umluft vorheizen. Backform mit Backpapier auslegen. Boden und Ränder mit Butter einfetten. Dann die geschmolzene Schokolade einfließen lassen. Anschließend den Teig in die Form füllen und gleichmäßig verteilen. Im Ofen bei 180 Grad Umluft 30 Minuten lang backen.","Für die Tomatensauce: Knoblauch schälen und fein hacken, in etwas Olivenöl andünsten. Passierte Tomaten, Zucker und Salz hinzufügen, 15 Minuten köcheln lassen. Abschmecken.","Gnocchi in Salzwasser garen – sie steigen zur Wasseroberfläche auf, wenn sie gar sind, aber ich lasse sie eine oder zwei Minuten länger drin. Zum Abkropfen in ein Sieb geben. Anschließend die Gnocchi in die Tomatensauce setzen und vorsichtig mischen."],
+    "notes": "", "tags": ["vegetarisch","pasta","italien"]
+  },
+  {
+    "id": "5",
+    "name": "Deftiges Rotweinrisotto",
+    "category": "Hauptgericht",
+    "portions": 4, "basePortion": 4,
+    "source": "ZEITmagazin – Elisabeth Raether",
+    "ingredients": ["1 Hühnerbrühe","½ Zwiebel","70 g Butter","2 EL Olivenöl","280 g Risottoreis","150 ml Rotwein","200 g frisches Wurstbrät (am besten Salsiccia)","50 g frisch geriebener Parmesan","Salz","schwarzer Pfeffer","etwas Balsamico-Essig"],
+    "steps": ["20 g von der Butter und das Olivenöl in einem größeren Topf geben und erhitzen. Die gehackte Zwiebel dazugeben und einige Minuten ohne Farbe anbraten, dann den Reis dazugeben und kurz mitrösten.","Mit Rotwein ablöschen, verdampfen lassen, dann das Wurstbrät dazugeben. Einmal kurz anbraten, dann mit Hühnerbrühe aufgießen, Flüssigkeit einkochen lassen, bis der Risotto gar ist. Das sollte nach ungefähr einer Viertelstunde der Fall sein.","Den Topf von Herd nehmen. Restliche Butter und Parmesan vorsichtig unterrühren. Auf Tellern anrichten, mit Salz und schwarzem Pfeffer und ein paar Tropfen Balsamico-Essig servieren."],
+    "notes": "", "tags": ["risotto","fleisch","winter"]
+  },
+  {
+    "id": "6",
+    "name": "Kartoffelsalat mit Zitrone und Kräutern",
+    "category": "Salat",
+    "portions": 8, "basePortion": 8,
+    "source": "ZEITmagazin – Elisabeth Raether",
+    "ingredients": ["1.5 kg Frühkartoffeln","Salz","Saft von 2 Zitronen","120 ml Olivenöl","3 Frühlingszwiebeln","eine Handvoll frische Minze","getrocknete Minze (optional, im Mörser zerstoßen)"],
+    "steps": ["Kartoffeln waschen. Falls die Kartoffel eine dünne Schale hat, kann man die Schale dranlassen, ansonsten schälen. Die Kartoffeln werden in etwa 1,5 cm große Würfel geschnitten.","Kartoffeln in einen Topf geben und mit kaltem Wasser knapp bedecken. Ungefähr 1 TL Salz dazugeben. Den Topf abdecken, das Wasser zum Kochen bringen. Die Temperatur runterschalten und etwa 13 bis 16 Minuten garen, je nach Sorte. Mit einem Messer prüfen, ob die Kartoffeln gar sind.","Die noch warmen Kartoffeln in eine Salatschüssel geben und mit Salz, Zitronensaft und Olivenöl anmachen. Dabei sehr vorsichtig vermengen. Abschmecken.","Wenn die Kartoffeln abgekühlt sind, gibt man fein geschnittene Frühlingszwiebeln auf die Kartoffelwürfel-Käse-Soße. Frische Minze und – sollte man sie irgendwo haben – getrocknete Minze hinzufügen."],
+    "notes": "Dazu passen gebratene Merguez, andere Kräuter dazutun: Petersilie, Koriander, Schnittlauch.", "tags": ["vegetarisch","salat","sommer","beilage"]
+  },
+  {
+    "id": "7",
+    "name": "Sizilianischer Mandelpudding (Biancomangiare)",
+    "category": "Dessert",
+    "portions": 4, "basePortion": 4,
+    "source": "ZEITmagazin",
+    "ingredients": ["½ l Mandelmilch (ungesüßt)","55 g Maisstärke","100 g Zucker","1 Prise Zimt","feiner Abrieb von ½ Biozitrone","fein gehackte Pistazien","frische Beeren"],
+    "steps": ["Maisstärke zunächst mit Hafermilch glatt rühren. Etwa 100 ml Mandelmilch beiseitestellen. Von der restlichen Mandelmilch zubereiten.","Zucker und Stärke, ebenso Basilikumblätter – man kann den Topf auch mit einem kleinen Schneebesen in die Sahne rühren – mit einem Holzlöffel erwärmten Milch geben. Mit einem Holzlöffel rühren und sanft aufkochen. Der Pudding sollte langsam eindicken.","Zimt hinzufügen. Die aufgelöste Stärke zur erwärmten Milch geben. Mit einem Holzlöffel rühren und sanft aufkochen. Den Pudding sollte langsam eindicken.","Eine Schüssel oder mehrere kleine Schüsseln anfeuchten. Pudding hineingeben. In den Kühlschrank stellen, dort einige Stunden den Pudding stürzen. Man kann, aber man muss nicht, den Pudding stürzen.","Mit fein gehackten Pistazien und frischen Beeren bestreuen."],
+    "notes": "", "tags": ["dessert","vegetarisch","sizilien","glutenfrei"]
+  },
+  {
+    "id": "8",
+    "name": "Crème brûlée mit Cassis-Sorbet",
+    "category": "Dessert",
+    "portions": 6, "basePortion": 6,
+    "source": "ZEITmagazin – Margit Stoffels",
+    "ingredients": ["¼ Vanilleschote","500 ml Sahne (mindestens 30% Fettanteil)","50 g Zucker","7 Eigelb (Größe M)","4-6 EL brauner Rohrzucker","100 ml Wasser","1 EL Zitronensaft","300 g schwarze Johannisbeeren (frisch oder tiefgekühlt)","50 g Zucker","150 ml schwarzer Johannisbeersaft","Johannisbeerlikör (Cassis, optional)"],
+    "steps": ["Zucker in einem Topf aufkochen, vom Herd nehmen. Eigelbe und 2 EL der warmen Sahne mit einem schnellen Schneebesen in die Sahne rühren. Masse in einem vorgeheizten Backofen bei 90 Grad Umluft, circa 60-70 Minuten backen. Im vorgeheizten Ofen (circa 2 cm Füllhöhe) verteilen. Crème auf feuerfeste Schälchen (circa 150 ml Inhalt, circa 2 cm Füllhöhe) verteilen.","Kühlen lassen und am besten über Nacht kalt stellen. Kurz vor dem Servieren gleichmäßig mit Rohrzucker bestreuen und mit einem Flambierbrenner (oder auch unter dem Backofengrill) goldbraun karamellisieren.","Für das Sorbet: Johannisbeeren waschen, verlesen oder auftauen. Zucker und Wasser in einem kleinen Topf erhitzen, bis sich der Zucker vollständig aufgelöst hat, abkühlen lassen. Beeren mit Zuckersirup und Johannisbeersaft (oder Johannisbeerlikör) gut vermengen.","Masse in eine flache, gefriergeeignete Form geben und in den Gefrierscrank stellen. Alle 30-40 Minuten mit einer Gabel gut umrühren, um die Bildung großer Eiskristalle zu vermeiden. Dies etwa 4-5 Mal wiederholen, bis die Masse cremig gefroren ist. Vor dem Servieren 5-10 Minuten antauen lassen, damit es sich leichter portionieren lässt."],
+    "notes": "", "tags": ["dessert","sommer","aufwendig"]
+  },
+  {
+    "id": "9",
+    "name": "Schokoladenkuchen mit Mandarinenschale",
+    "category": "Dessert",
+    "portions": 8, "basePortion": 8,
+    "source": "ZEITmagazin – Elisabeth Raether",
+    "ingredients": ["140 g dunkle Schokolade (70% Kakaogehalt)","140 g zimmerwarme Butter (plus etwas mehr zum Fetten)","80 g brauner Zucker","4 Eier","Abrieb von 1 Bio-Mandarine","200 g gemahlene Mandeln","1 TL Backpulver","vielleicht etwas Puderzucker","geschlagene Sahne"],
+    "steps": ["Zunächst Schokolade schmelzen (im Wasserbad oder direkt auf der Platte, wenn man einen Induktionsherd hat).","In einer Schüssel Butter und Zucker mit dem Handmixer schaumig schlagen. Eier dazugeben und verrühren. Abrieb der Mandarine und Backpulver hinzufügen. Mandeln und Backpulver hinzufügen.","Den Boden einer Springform mit Backpapier auslegen und die Ränder mit Butter einfetten. Dann die geschmolzene Schokolade einfließen lassen. Anschließend den Teig in die Form füllen und gleichmäßig verteilen.","Im Ofen bei 180 Grad Umluft 30 Minuten lang backen.","Wer mag, serviert den Kuchen mit Puderzucker und geschlagener Sahne."],
+    "notes": "", "tags": ["kuchen","schokolade","advent","glutenfrei"]
+  },
+  {
+    "id": "10",
+    "name": "Zitronen-Olivenöl-Kuchen",
+    "category": "Dessert",
+    "portions": 8, "basePortion": 8,
+    "source": "ZEITmagazin – Elisabeth Raether",
+    "ingredients": ["180 ml Olivenöl (plus etwas mehr zum Einfetten)","300 g weißer Zucker","Abrieb von 3 Bio-Zitronen","125 ml frisch gepresster Zitronensaft","3 Eier","250 g Mehl","1 TL Backpulver","1 TL Salz","300 ml Milch","2 TL Vanillepaste oder Vanillezucker"],
+    "steps": ["Den Ofen auf 180 Grad Umluft vorheizen. Backform mit Backpapier auslegen. Boden und Ränder mit etwas Olivenöl einfetten.","Vanillezucker vermengen. Man formt nun in das Mehl eine Mulde, gießt die Olivenöl-Mischung hinzu, dann die Hälfte der Milch. Von außen beginnend dann alles miteinander vermengen. Dann das verbliebene Öl und die restliche Milch dazugießen. Es entsteht ein glatter, recht flüssiger Teig.","In der zweiten Schüssel werden Zitronenabrieb und Zitronensaft hinzugegeben. In der dritten Schüssel Milch, Backpulver und Salz verrühren.","Teig in die Kuchenform gießen. Kuchen 50 bis 60 Minuten lang backen. Man lässt ihn abkühlen, bevor man ihn aus der Form holt. Vor dem Servieren am besten 10 Minuten abkühlen lassen."],
+    "notes": "", "tags": ["kuchen","zitrone","vegetarisch"]
+  },
+  {
+    "id": "11",
+    "name": "Suppe aus gerösteten Tomaten",
+    "category": "Vorspeise",
+    "portions": 4, "basePortion": 4,
+    "source": "ZEITmagazin – Elisabeth Raether",
+    "ingredients": ["1 kg mittelgroße Tomaten","1 rote Paprika","Salz","schwarzer Pfeffer","60 ml Olivenöl (plus etwas mehr)","1 weiße Zwiebel","500 ml Brühe","circa 6 Basilikumblätter","frisches Weißbrot"],
+    "steps": ["Tomaten waschen, halbieren, den Strunk entfernen. Paprika waschen und in Viertel schneiden (das Weiße, Kerne und Strunk entfernen).","Schnittfläche nach oben auf ein mit Backpapier ausgelegtes Backblech setzen. Mit der Hälfte des Olivenöls beträufeln. Alles salzen und pfeffern. Bei 200 Grad Umluft 25 Minuten lang rösten. Die Tomaten sollen etwas Farbe annehmen, aber nicht zu dunkel werden.","Zwiebel schälen und in feine Ringe schneiden. Diese in einem großen Topf im restlichen Olivenöl andünsten. Salzen.","Die gerösteten Tomaten und Paprika dazugeben. Mit Brühe aufgießen. Das Ganze noch mal 15 Minuten köcheln lassen. Dann Basilikumblätter hinzufügen. Abschmecken.","Suppe pürieren. Auf die Teller verteilen, mit Olivenöl beträufeln. Am besten noch eine Scheibe Weißbrot dazu reichen."],
+    "notes": "", "tags": ["vegetarisch","suppe","winter","sommer"]
+  },
+  {
+    "id": "12",
+    "name": "Zitronenrisotto mit Gin, Mascarpone und Pistazien",
+    "category": "Hauptgericht",
+    "portions": 2, "basePortion": 2,
+    "source": "ZEITmagazin – Elisabeth Raether",
+    "ingredients": ["½ Zwiebel","Olivenöl","100 g Risottoreis","5 EL Gin","500-600 ml Hühnerbrühe","2 EL Zitronensaft","Abrieb von ½ Bio-Zitrone","30 g frisch geriebener Parmesan","40 g Mascarpone","2 EL Pistazienkerne","schwarzer Pfeffer"],
+    "steps": ["Zwiebel schälen und fein hacken, in (nicht allzu viel) Olivenöl andünsten. Mit Gin ablöschen und kurz mitrösten. Reis hinzugeben, in zwei Suppenkellen einkochen lassen. Dann zwei Suppenkellen Brühe hinzufügen. Flüssigkeit einkochen lassen, bis der Risotto gar ist. Diesen Vorgang wiederholen, bis der Risotto gar ist.","Mascarpone hinzugeben. Zitronensaft und -abrieb, Parmesan und Mascarpone in der Pfanne ohne Fett rösten, grob zerstoßen (zum Beispiel in einem Mörser). Risotto auf Teller verteilen und mit Pistazien und mit frisch gemahlenem Pfeffer bestreuen.","Pistazien in der Pfanne ohne Fett rösten, grob zerstoßen. Risotto auf Teller verteilen und mit Pistazien und frisch gemahlenem Pfeffer bestreuen."],
+    "notes": "", "tags": ["risotto","vegetarisch","gin","zitrone"]
+  },
+  {
+    "id": "13",
+    "name": "Rhabarberkuchen",
+    "category": "Dessert",
+    "portions": 8, "basePortion": 8,
+    "source": "ZEITmagazin – Elisabeth Raether",
+    "ingredients": ["110 g Butter","160 g Zucker","1 Päckchen Vanillezucker","2 Eier","190 g Mehl","1 TL Backpulver","75 ml Milch","800 g Rhabarber","230 g Zucker","1 EL Maisstärke"],
+    "steps": ["Für die Füllung: Rhabarber schälen und in etwa 0,5 cm dicke Stücke schneiden, diese in den Topf geben. Zucker und Maisstärke in einem Topf verrühren. Wie ein Schatz am Grund des Meeres. Wasser sind süß.","Die Mischung erhitzen, etwa 5 Minuten lang köcheln lassen. Das Ganze dann in eine Auflaufform geben, meine ist oval und 26 cm lang.","Für den Teig: Butter in einem kleinen Topf auf dem Herd langsam zergehen lassen. Dann in einer Teigschüssel zusammen mit Zucker und Vanillezucker mithilfe eines Handrührgeräts 3 Minuten lang schaumig schlagen.","Eier hinzufügen, alles glatt rühren. Dann Mehl und Backpulver hinzufügen, alles glatt rühren. Dann Milch hinzufügen.","Den Teig auf den Rhabarber in der Auflaufform geben. Den Teig auf den Rhabarber in der Auflaufform geben. Im Backofen bei 180 Grad Ober-/Unterhitze 45 bis 50 Minuten lang backen.","Am besten noch lauwarm mit ein bisschen Crème fraîche essen."],
+    "notes": "", "tags": ["kuchen","rhabarber","frühling","vegetarisch"]
+  },
+  {
+    "id": "14",
+    "name": "Mac and Cheese mit Blumenkohl",
+    "category": "Hauptgericht",
+    "portions": 6, "basePortion": 6,
+    "source": "ZEITmagazin – Elisabeth Raether",
+    "ingredients": ["50 g Butter (plus etwas mehr zum Fetten)","50 g Mehl","500 ml Milch","1 Blumenkohl (700-800 g)","250 g Makkaroni","150 g Cheddar und/oder Bergkäse (frisch gerieben)","Salz","schwarzer Pfeffer"],
+    "steps": ["Eine Auflaufform buttern. Einen Topf mit gesalzenem Wasser zum Kochen bringen. Blumenkohl in Röschen zerteilen, diese im Salzwasser 10 bis 12 Minuten lang kochen lassen. Abgießen und beiseitestellen.","Ebenso Butter in einem anderen Topf die Makkaroni al dente kochen lassen. Während dessen Butter in einem Topf zergehen lassen, Mehl hineinrühren, Topf zergehen lassen. Währenddessen Butter in einem anderen Topf die Makkaroni al dente kochen, bis eine glatte Masse entsteht. Diese darf nicht anbrennen. Milch nach und nach hinzugießen, die Mischung dann leicht köcheln lassen, bis sie eindickt (das dauert 6 bis 8 Minuten). Zwei Drittel des geriebenen Käses einrühren, anschließend mit Salz und Pfeffer würzen.","Blumenkohl-Nudeln in die Auflaufform geben. Die Blumenkohltröschen zur Soße geben. Den restlichen Käse darüberstreuen. Im vorgeheizten Backofen bei 180 Grad Umluft 20 bis 25 Minuten lang backen."],
+    "notes": "", "tags": ["vegetarisch","pasta","käse","auflauf"]
+  }
+];
+
+let activeId = null;
+let timers = {};
+let timerIntervals = {};
+
+function renderList() {
+  var q = document.getElementById('search-input').value.toLowerCase();
+  var ac = document.querySelector('.chip.active');
+  var activeCat = ac ? ac.dataset.cat : '';
+  var cats = [...new Set(RECIPES.map(function(r){return r.category;}))].filter(Boolean);
+  document.getElementById('filter-row').innerHTML =
+    '<button class="chip'+(activeCat===''?' active':'')+'" data-cat="" onclick="filterCat(this)">Alle</button>'+
+    cats.map(function(c){return '<button class="chip'+(activeCat===c?' active':'')+'" data-cat="'+c+'" onclick="filterCat(this)">'+c+'</button>';}).join('');
+  var filtered = RECIPES.filter(function(r){
+    var mq = !q||r.name.toLowerCase().includes(q)||(r.ingredients||[]).some(function(i){return i.toLowerCase().includes(q);})||(r.tags||[]).some(function(t){return t.toLowerCase().includes(q);});
+    return mq&&(!activeCat||r.category===activeCat);
+  });
+  var grid = document.getElementById('recipe-grid');
+  if(!filtered.length){grid.innerHTML='<div class="empty"><p>Keine Rezepte gefunden.</p></div>';return;}
+  grid.innerHTML = filtered.map(function(r){
+    return '<div class="card" tabindex="0" onclick="openDetail(\''+r.id+'\')" onkeydown="if(event.key===\'Enter\')openDetail(\''+r.id+'\')">'+
+      '<div class="card-cat">'+(r.category||'')+'</div>'+
+      '<div class="card-title">'+r.name+'</div>'+
+      '<div class="card-meta">'+r.portions+' Portionen'+(r.source?' · '+r.source:'')+'</div>'+
+      (r.tags&&r.tags.length?'<div class="card-tags">'+r.tags.map(function(t){return '<span class="tag">'+t+'</span>';}).join('')+'</div>':'')+
+      '</div>';
+  }).join('');
+}
+
+function filterCat(el){
+  document.querySelectorAll('.chip').forEach(function(c){c.classList.remove('active');});
+  el.classList.add('active');
+  renderList();
+}
+
+function openDetail(id){
+  activeId=id;
+  var r=RECIPES.find(function(x){return x.id===id;});
+  if(!r)return;
+  r.currentPortions=r.currentPortions||r.portions;
+  document.getElementById('d-header').textContent=r.name;
+  renderDetail(r);
+  document.getElementById('modal-detail').classList.remove('hidden');
+}
+
+function closeDetail(){
+  document.getElementById('modal-detail').classList.add('hidden');
+  Object.values(timerIntervals).forEach(clearInterval);
+  timerIntervals={};timers={};
+  var r=RECIPES.find(function(x){return x.id===activeId;});
+  if(r)r.currentPortions=r.portions;
+}
+
+function renderDetail(r){
+  var cp=r.currentPortions||r.portions;
+  var f=cp/r.basePortion;
+  document.getElementById('detail-body').innerHTML=
+    '<div class="detail-eyebrow">'+(r.category||'')+'</div>'+
+    '<div class="detail-title">'+r.name+'</div>'+
+    '<div class="detail-source">'+(r.source||'')+(r.tags&&r.tags.length?' · '+r.tags.join(', '):'')+'</div>'+
+    '<div class="section-label">Portionen anpassen</div>'+
+    '<div class="scale-row">'+
+      '<button class="scale-btn" onclick="changePortions(-1)">−</button>'+
+      '<div class="portions-display">'+cp+' Portionen</div>'+
+      '<button class="scale-btn" onclick="changePortions(1)">+</button>'+
+    '</div>'+
+    '<div class="section-label" style="margin-top:20px">Zutaten</div>'+
+    '<ul class="ing-list">'+
+      (r.ingredients||[]).map(function(i){var s=scaleIng(i,f);return '<li><span class="ing-amount">'+s.amount+'</span><span>'+s.name+'</span></li>';}).join('')+
+    '</ul>'+
+    '<div class="section-label">Zubereitung</div>'+
+    '<div class="cook-actions"><button class="btn btn-secondary btn-sm" onclick="resetSteps()">↺ Zurücksetzen</button></div>'+
+    '<div class="steps-list" id="steps-list">'+
+      (r.steps||[]).map(function(s,i){return renderStep(s,i);}).join('')+
+    '</div>'+
+    (r.notes?'<div class="notes-box"><div class="notes-label">Notizen</div>'+r.notes+'</div>':'');
+}
+
+function renderStep(s,i){
+  var tm=s.match(/(\d+)\s*(?:bis\s*\d+\s*)?Minute[n]?/i);
+  var ts=tm?parseInt(tm[1])*60:0;
+  return '<div class="step" id="step-'+i+'" onclick="toggleStep('+i+')">'+
+    '<div class="step-num">'+(i+1)+'</div>'+
+    '<div><div class="step-text">'+s+'</div>'+
+    (ts?'<button class="timer-btn" onclick="startTimer(event,'+i+','+ts+')">⏱ '+tm[1]+' min starten</button>':'')+
+    '<div class="active-timer hidden" id="timer-display-'+i+'"></div></div></div>';
+}
+
+function toggleStep(i){var el=document.getElementById('step-'+i);if(el)el.classList.toggle('step-done');}
+function resetSteps(){document.querySelectorAll('.step').forEach(function(el){el.classList.remove('step-done');});}
+
+function startTimer(e,i,secs){
+  e.stopPropagation();
+  if(timerIntervals[i])return;
+  timers[i]=secs;
+  var d=document.getElementById('timer-display-'+i);
+  if(d)d.classList.remove('hidden');
+  updateTimerDisplay(i);
+  timerIntervals[i]=setInterval(function(){
+    timers[i]--;
+    if(timers[i]<=0){clearInterval(timerIntervals[i]);delete timerIntervals[i];var d=document.getElementById('timer-display-'+i);if(d)d.textContent='Fertig!';return;}
+    updateTimerDisplay(i);
+  },1000);
+}
+
+function updateTimerDisplay(i){
+  var d=document.getElementById('timer-display-'+i);if(!d)return;
+  var m=Math.floor(timers[i]/60),s=timers[i]%60;
+  d.textContent=m+':'+s.toString().padStart(2,'0')+' verbleibend';
+}
+
+function changePortions(delta){
+  var r=RECIPES.find(function(x){return x.id===activeId;});if(!r)return;
+  r.currentPortions=Math.max(1,(r.currentPortions||r.portions)+delta);
+  renderDetail(r);
+}
+
+function scaleIng(ing,f){
+  var m=ing.match(/^([\d.,\/]+)\s*([a-zA-ZäöüÄÖÜ]*\.?)\s+(.+)$/);
+  if(!m)return{amount:'',name:ing};
+  var n=parseFloat(m[1].replace(',','.'));
+  var sc=n*f;
+  var r=sc<1?Math.round(sc*10)/10:Math.round(sc*4)/4;
+  return{amount:(r===Math.floor(r)?r:r.toFixed(1))+' '+(m[2]||''),name:m[3]};
+}
+
+renderList();
+</script>
+</body>
+</html>
