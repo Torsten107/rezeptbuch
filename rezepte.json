@@ -1,0 +1,57 @@
+[
+  {
+    "id": "1",
+    "name": "Halloumi mit geschmorten Aprikosen",
+    "category": "Hauptgericht",
+    "portions": 4,
+    "basePortion": 4,
+    "source": "ZEITmagazin – Elisabeth Raether",
+    "ingredients": [
+      "200 g Aprikosen",
+      "1 EL Honig",
+      "1 TL Balsamico",
+      "1 EL Olivenöl",
+      "1 TL Thymian",
+      "Salz",
+      "Pfeffer",
+      "250 g Halloumi",
+      "60 g Pekannüsse",
+      "2 TL Zucker",
+      "1 EL Wasser"
+    ],
+    "steps": [
+      "Pekannüsse in einer Pfanne bei mittlerer Hitze 2 Minuten anrösten.",
+      "Zucker und Wasser in die Pfanne geben und sofort rühren, bis sich der Zucker aufgelöst hat.",
+      "Nüsse auf Backpapier auskühlen lassen.",
+      "Balsamico, Olivenöl, Thymian, Salz und Pfeffer in einen kleinen Topf geben und 15 Minuten köcheln lassen.",
+      "Aprikosen halbieren und mit Honig und Öl 3 Minuten schmoren.",
+      "Halloumi von beiden Seiten mit Öl bepinseln und goldbraun braten.",
+      "Halloumi auf Tellern anrichten, Aprikosen dazulegen, mit der Soße beträufeln und mit Nüssen bestreuen."
+    ],
+    "notes": "",
+    "tags": ["vegetarisch", "sommer"]
+  },
+  {
+    "id": "2",
+    "name": "Heringssalat",
+    "category": "Salat",
+    "portions": 8,
+    "basePortion": 8,
+    "source": "Familienrezept",
+    "ingredients": [
+      "2-3 Zwiebeln",
+      "1 Jagdwurst",
+      "1 Packung Matjes",
+      "4-5 Äpfel",
+      "6 Eier (hartgekocht)",
+      "1 Glas Gewürzgurken"
+    ],
+    "steps": [
+      "Alle Zutaten in kleine Würfel schnippeln – „klein" heißt wirklich klein.",
+      "Alles gründlich mischen.",
+      "Am besten über Nacht ziehen lassen."
+    ],
+    "notes": "Zwingend mindestens zum Jahreswechsel aufschneiden.",
+    "tags": ["klassiker", "silvester", "familienrezept"]
+  }
+]
